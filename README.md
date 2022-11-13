@@ -1,4 +1,3 @@
-# boilerplate-microserve-nestjs
 # BOILER PLATE MICROSERVICE Docker
 
 ## Usage example
