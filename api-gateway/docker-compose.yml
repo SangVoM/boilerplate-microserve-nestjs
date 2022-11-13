@@ -1,0 +1,27 @@
+version: "3.7"
+services:
+  api-gateway:
+    image: ${APP_NAME}:1.0.0
+    container_name: ${APP_NAME}_1.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - ${APP_PORT}:${APP_PORT}
+    restart: unless-stopped
+    healthcheck:
+      test: wget --quiet --tries=1 --spider http://localhost:${APP_PORT} || exit 1z
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - .:/${APP_NAME}
+      - /${APP_NAME}/node_modules
+    external_links:
+      - ${LINK_REDIS}:${LINK_REDIS}
+    networks:
+      - default
+networks:
+  default:
+    external: true
+    name: boilerplate-microservice-network

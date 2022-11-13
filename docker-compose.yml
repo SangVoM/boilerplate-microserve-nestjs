@@ -1,0 +1,32 @@
+version: "3.7"
+services:
+  redis:
+    image: redis:alpine
+    container_name: redis_alpine
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    volumes:
+      - ./volumes/redis/data:/var/lib/redis
+      - ./volumes/redis/conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_REPLICATION_MODE=master
+    networks:
+      - default
+  postgresql:
+    image: postgres:latest
+    container_name: postgresql_latest
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    volumes:
+      - ./volumes/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    networks:
+      - default
+networks:
+  default:
+    external: true
+    name: boilerplate-microservice-network
