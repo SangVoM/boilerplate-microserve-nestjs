@@ -1,13 +1,11 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import UserDto, { UserShowDto } from './dto/user.dto';
+import UserDto from './dto/user.dto';
 import { REDIS_CLIENT } from '../../common/microservice/redis/redis';
 import { ClientRedis } from '@nestjs/microservices';
 import { HashService } from '../../common/encryption/hash.service';
 import { MESSAGE_PATTERN } from './package';
 import { responseBuilder } from '../../common/dto/response/response.dto';
 import { AuthService } from '../../auth/auth.service';
-import { ACTION_TYPE } from '../../auth/package';
 import { FindByEmailDto } from '../../auth/dto/find-by-email.dto';
 import { lastValueFrom } from 'rxjs';
 
@@ -30,14 +28,13 @@ export class UserService {
     return responseBuilder(UserDto, user);
   }
 
-  async create(createUserDto: CreateUserDto): Promise<UserShowDto> | null {
-    createUserDto.password = this.hashService.make(createUserDto.password);
-    const userClientProxy = this.clientRedis.send(
-      MESSAGE_PATTERN.CREATE,
-      createUserDto,
+  async findOne(id: number): Promise<UserDto> | null {
+    const userClientProxy = await this.clientRedis.send(
+      MESSAGE_PATTERN.FIND_BY_ID,
+      { id },
     );
     const user = await lastValueFrom(userClientProxy);
 
-    return responseBuilder(UserShowDto, user);
+    return responseBuilder(UserDto, user);
   }
 }

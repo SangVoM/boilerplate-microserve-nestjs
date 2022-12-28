@@ -1,3 +1,5 @@
+import {USER_NAMESPACE} from "../api/user/package";
+
 export const AUTH_NAMESPACE = 'auth';
 
 export const METHODS = {
@@ -6,6 +8,7 @@ export const METHODS = {
 };
 export const MESSAGE_PATTERN = {
   REGISTER: `${AUTH_NAMESPACE}.register`,
+  CREATE: `${USER_NAMESPACE}.create`,
 };
 
 export enum ACTION_TYPE {

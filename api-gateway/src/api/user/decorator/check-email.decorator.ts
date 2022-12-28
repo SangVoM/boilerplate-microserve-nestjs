@@ -25,8 +25,8 @@ export class CheckEmailConstraint implements ValidatorConstraintInterface {
 
   async validate(value: any) {
     try {
-      const user = await this.userService.findByEmail(value);
-      console.log('user: ', user);
+      const user = await this.userService.findByEmail({ email: value });
+
       return !user;
     } catch (e) {
       return e.code === 400;

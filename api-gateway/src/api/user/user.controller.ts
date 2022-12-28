@@ -1,10 +1,15 @@
-import { METHODS } from './package';
-import { Body, Controller } from '@nestjs/common';
+import { METHODS, USER_NAMESPACE } from './package';
+import { Controller, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { RpcMethod, RpcService } from '../../common/microservice/rpc';
-import { USER_NAMESPACE } from './package';
+import {
+  JsonRpcContext,
+  RpcMethod,
+  RpcService,
+} from '../../common/microservice/rpc';
 import { BaseController } from '../../common/controller/base.controller';
+import { Ctx } from '@nestjs/microservices';
+import { JWTGuard } from '../../common/guard/jwt.guard';
+import { UserInfo } from '../../common/guard/rpc-auth.guard';
 import { UserShowDto } from './dto/user.dto';
 
 @RpcService({
@@ -16,8 +21,9 @@ export class UserController extends BaseController {
     super();
   }
 
-  @RpcMethod({ name: METHODS.REGISTER })
-  create(@Body() createUserDto: CreateUserDto): Promise<UserShowDto> {
-    return this.userService.create(createUserDto);
+  @RpcMethod({ name: METHODS.GET_INFO_USER })
+  @UseGuards(JWTGuard)
+  getInfoUser(@Ctx() context: JsonRpcContext): UserShowDto {
+    return context.customData.get(UserInfo);
   }
 }

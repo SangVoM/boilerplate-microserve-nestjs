@@ -1,6 +1,6 @@
 app:
   name: api-gateway
-  url: 'http://127.0.0.1:3000'
+  url: 'http://127.0.0.1:3001'
   host: 0.0.0.0
   port: 3001
 auth:
@@ -17,6 +17,6 @@ openRPC:
   enable: true
   path: /rpc/v1
 redis:
-  host: redis_alpine
+  host: localhost
   port: 6379
   password: sangvo
