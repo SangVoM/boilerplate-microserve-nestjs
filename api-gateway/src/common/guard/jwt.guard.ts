@@ -1,27 +1,27 @@
-import { CodeErrorRpcException, JsonRpcContext } from '../microservice/rpc';
-import { ExecutionContext, HttpStatus, Injectable } from '@nestjs/common';
-import { RPCAuthGuard } from './rpc-auth.guard';
-import { LoggerService } from '../logger/logger.service';
-import { HttpStatusMessage } from '../message/http-status.message';
+import { CodeErrorRpcException, JsonRpcContext } from "../microservice/rpc";
+import { ExecutionContext, HttpStatus, Injectable } from "@nestjs/common";
+import { RPCAuthGuard } from "./rpc-auth.guard";
+import { LoggerService } from "../logger/logger.service";
+import { HttpStatusMessage } from "../message/http-status.message";
 
 @Injectable()
-export class JWTGuard extends RPCAuthGuard('jwt') {
+export class JWTGuard extends RPCAuthGuard("jwt") {
   private unauthorizedError = new CodeErrorRpcException(
     HttpStatusMessage.UNAUTHORIZED,
-    HttpStatus.UNAUTHORIZED,
+    HttpStatus.UNAUTHORIZED
   );
   canActivate(context: ExecutionContext) {
     try {
-      LoggerService.log('#JWTGuard.canActivate', JWTGuard.name);
+      LoggerService.log("#JWTGuard.canActivate", JWTGuard.name);
       const authData = context
         .switchToRpc()
         .getContext<JsonRpcContext>()
-        .getMetadataByKey('Authorization');
+        .getMetadataByKey("Authorization");
       if (!authData) {
         LoggerService.error(
-          '#JWTGuard.canActivate',
+          "#JWTGuard.canActivate",
           this.unauthorizedError.stack,
-          JWTGuard.name,
+          JWTGuard.name
         );
         throw this.unauthorizedError;
       }
@@ -29,5 +29,9 @@ export class JWTGuard extends RPCAuthGuard('jwt') {
     } catch (e) {
       throw this.unauthorizedError;
     }
+  }
+
+  getRequest(context: ExecutionContext) {
+    return context.switchToRpc().getContext().req;
   }
 }
