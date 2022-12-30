@@ -2,7 +2,6 @@ import {
   CanActivate,
   ExecutionContext,
   HttpStatus,
-  Inject,
   Logger,
   mixin,
   Optional,
@@ -17,12 +16,20 @@ import {
 } from '@nestjs/passport';
 import { memoize } from '@nestjs/passport/dist/utils/memoize.util';
 import { defaultOptions } from '@nestjs/passport/dist/options';
-import { CodeErrorRpcException, TypesafeKey } from '../microservice/rpc';
+import { RpcArgumentsHost } from '@nestjs/common/interfaces';
+import { plainToInstance } from 'class-transformer';
+import { ClassConstructor } from 'class-transformer/types/interfaces';
+import {
+  CodeErrorRpcException,
+  JsonRpcContext,
+  TypesafeKey,
+} from '../microservice/rpc';
 import { HttpStatusMessage } from '../message/http-status.message';
-import { UserShowDto } from '../../api/user/dto/user.dto';
 import { USER_NAMESPACE } from '../../api/user/package';
+import { UserShowDto } from '../../api/user/dto/user.dto';
 
 export const UserInfo = new TypesafeKey<UserShowDto>(USER_NAMESPACE);
+
 export const RPCAuthGuard: (type?: string | string[]) => Type<IAuthGuard> =
   memoize(createRPCAuthGuard);
 
@@ -30,11 +37,8 @@ const NO_STRATEGY_ERROR = `In order to use "defaultStrategy", please, ensure to 
 
 function createRPCAuthGuard(type?: string | string[]): Type<CanActivate> {
   class MixinAuthGuard<TUser = any> implements CanActivate {
-    @Optional()
-    @Inject(AuthModuleOptions)
-    protected options: AuthModuleOptions = {};
-    constructor(@Optional() options?: AuthModuleOptions) {
-      this.options = options ?? this.options;
+    constructor(@Optional() protected readonly options?: AuthModuleOptions) {
+      this.options = this.options || {};
       if (!type && !this.options.defaultStrategy) {
         new Logger('AuthGuard').error(NO_STRATEGY_ERROR);
       }
@@ -51,14 +55,11 @@ function createRPCAuthGuard(type?: string | string[]): Type<CanActivate> {
         this.getResponse(context),
       ];
       const passportFn = createPassportContext(request, response);
-      console.log(request)
       await passportFn(
         type || this.options.defaultStrategy,
         options,
-        (err, user, info, status) => {
-          console.log('LOG: ', user, info);
-          this.handleRequest(err, user, info, context, status);
-        },
+        (err, user, info, status) =>
+          this.handleRequest(err, user, info, context, status),
       );
       return true;
     }
@@ -101,19 +102,34 @@ function createRPCAuthGuard(type?: string | string[]): Type<CanActivate> {
 }
 
 const createPassportContext =
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  (request, response) => (type, options, callback: Function) =>
+  (request, response) =>
+  (
+    type,
+    options,
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    callback: Function,
+  ) =>
     new Promise<void>((resolve, reject) =>
       passport.authenticate(type, options, (err, user, info, status) => {
         try {
           request.authInfo = info;
           return resolve(callback(err, user, info, status));
         } catch (err) {
-          reject(err);
-          // throw new CodeErrorRpcException(
-          //   HttpStatusMessage.UNAUTHORIZED,
-          //   HttpStatus.UNAUTHORIZED,
-          // );
+          throw new CodeErrorRpcException(
+            HttpStatusMessage.UNAUTHORIZED,
+            HttpStatus.UNAUTHORIZED,
+          );
         }
       })(request, response, (err) => (err ? reject(err) : resolve())),
     );
+
+export function handleRpcRequest<T>(
+  data: any,
+  clsT: ClassConstructor<T>,
+  clsV: TypesafeKey<any>,
+  rpcArgumentsHost: RpcArgumentsHost,
+) {
+  rpcArgumentsHost
+    .getContext<JsonRpcContext>()
+    .customData.set(clsV, plainToInstance(clsT, data));
+}

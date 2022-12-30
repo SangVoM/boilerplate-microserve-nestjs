@@ -1,8 +1,9 @@
 import { CodeErrorRpcException, JsonRpcContext } from '../microservice/rpc';
 import { ExecutionContext, HttpStatus, Injectable } from '@nestjs/common';
-import { RPCAuthGuard } from './rpc-auth.guard';
+import { RPCAuthGuard, handleRpcRequest, UserInfo } from './rpc-auth.guard';
 import { LoggerService } from '../logger/logger.service';
 import { HttpStatusMessage } from '../message/http-status.message';
+import { UserShowDto } from '../../api/user/dto/user.dto';
 
 @Injectable()
 export class JWTGuard extends RPCAuthGuard('jwt') {
@@ -29,5 +30,13 @@ export class JWTGuard extends RPCAuthGuard('jwt') {
     } catch (e) {
       throw this.unauthorizedError;
     }
+  }
+
+  handleRequest(err, user, info, context: ExecutionContext) {
+    if (err || info || !user) {
+      throw err || info || this.unauthorizedError;
+    }
+    handleRpcRequest(user, UserShowDto, UserInfo, context.switchToRpc());
+    return user;
   }
 }
