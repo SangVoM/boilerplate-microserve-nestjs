@@ -35,6 +35,5 @@ import { LoggerModule } from './common/logger/logger.module';
     LoggerModule,
   ],
   controllers: [],
-  providers: [],
 })
 export class AppModule {}

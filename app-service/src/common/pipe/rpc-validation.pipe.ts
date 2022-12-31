@@ -1,6 +1,6 @@
 import { ArgumentMetadata, Injectable, PipeTransform } from '@nestjs/common';
 import { validate } from 'class-validator';
-import { plainToClass } from 'class-transformer';
+import { plainToInstance } from 'class-transformer';
 import { RpcException } from '@nestjs/microservices';
 import * as moment from 'moment';
 
@@ -10,7 +10,7 @@ export class RPCValidationPipe implements PipeTransform<any> {
     if (!metatype || !RPCValidationPipe.toValidate(metatype)) {
       return value;
     }
-    const object = plainToClass(metatype, value);
+    const object = plainToInstance(metatype, value);
     const errors = await validate(object);
     if (errors.length > 0) {
       throw new RpcException(

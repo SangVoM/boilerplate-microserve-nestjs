@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -10,6 +10,9 @@ import { AuthService } from './auth.service';
 import { UserService } from '../api/user/user.service';
 import { EncryptDataService } from '../common/encryption/encrypt.service';
 import { HashService } from '../common/encryption/hash.service';
+import { UserModule } from '../api/user/user.module';
+import { RedisMicroserviceModule } from '../common/microservice/redis/redis-microservice.module';
+import { JwtStrategy } from './strategy/jwt.strategy';
 
 @Module({
   imports: [
@@ -29,13 +32,21 @@ import { HashService } from '../common/encryption/hash.service';
         ),
         signOptions: {
           algorithm: 'ES512',
-          expiresIn: `${configService.get<AuthConfig>('auth').expiresIn}`,
+          expiresIn: `${configService.get<AuthConfig>('auth').expiresIn}s`,
         },
       }),
     }),
+    forwardRef(() => UserModule),
+    RedisMicroserviceModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, UserService, EncryptDataService, HashService],
+  providers: [
+    AuthService,
+    UserService,
+    EncryptDataService,
+    HashService,
+    JwtStrategy,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}
