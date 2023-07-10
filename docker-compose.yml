@@ -14,7 +14,7 @@ services:
     networks:
       - default
   postgresql:
-    image: postgres:latest
+    image: postgres:14
     container_name: postgresql_latest
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"

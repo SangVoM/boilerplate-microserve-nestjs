@@ -17,6 +17,6 @@ openRPC:
   enable: true
   path: /rpc/v1
 redis:
-  host: localhost
+  host: redis_alpine
   port: 6379
   password: sangvo
